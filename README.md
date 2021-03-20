@@ -897,4 +897,4 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         
 # 최종 시연 영상
 
-<iframe width="640" height="360" src="https://www.youtube.com/watch?v=E5ArMEd9lHQ" frameborder="0" gesture="media" allowfullscreen=""></iframe>
+[![쿠버네티스 환경에서의 다중 사이트 가상네트워크 구성 및 통합관제 시스템 _ 스마트팩토리 서비스 구현](http://img.youtube.com/vi/E5ArMEd9lHQ/0.jpg)](https://youtu.be/E5ArMEd9lHQ?t=0s)
