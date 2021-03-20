@@ -556,3 +556,345 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         마찬가지로 prometheus와 prometheus alertmanager에도 접근할 수 있습니다.
         
         만약 helm values.yaml을 수정하려면 helm upgrade 명령어를 사용하시면 됩니다. 또한, 만약 release가 잘못되었다면 helm rollback 명령어를 통해 롤백이 가능합니다.
+        
+
+## 스마트 팩토리 서비스 구현
+        
+### Alertmanager 설정 방법 및 카카오톡으로 알림 서비스 보내기
+
+- helm을 이용해 그라파나와 프로메테우스를 쿠버네티스에 구성 후, 어떻게 하면 알림 메시지를 이메일로 보내며 이를 확장해 카카오톡으로 서비스를 이용할 수 있을지 살펴보겠습니다.
+    
+    - 이메일을 보내기 위한 사전 세팅
+        
+        Gmail을 통합해야 합니다. 즉, 먼저 외부 프로그램의 연결을 수신할 수 있도록 gmail 계정을 활성화 해야합니다. https://myaccount.google.com/lesssecureapps 이 링크로 접속하여 gmail 계정을 활성화 하기 위해 2차 인증을 할 수 있도록 세팅합니다.
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111868193-daf04080-89bb-11eb-8e0b-f2b1e510c78c.png)
+        
+        다음과 같이 앱 비밀번호가 생성되면 그것을 메모장에 보관하여 관리합니다. 이 비밀번호는 이메일을 보낼 때 비밀번호로 사용될 것입니다.
+        
+        이렇게 2차 비밀번호를 생성한 이후, 이메일을 보내기 위해 prometheus-operator 디렉토리에 존재하는 values.yaml 파일에 접근합니다. 접근한 파일에서 alertmanager: 를 찾습니다.
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111868194-dc216d80-89bb-11eb-93d3-de9be2ed7b20.png)
+        
+        그 후, 밑으로 코드를 내려보면 config: 라는 코드가 있습니다. 이곳에 접근합니다.
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111868195-dc216d80-89bb-11eb-99a9-130ab3461fe0.png)
+        
+        접근한 후, 자신의 이메일과 2차 비밀번호를 세팅합니다. 그리고 어떤 상대에게 이메일에 보낼지 이메일 ID를 입력해 줍니다.
+        
+        ![4](https://user-images.githubusercontent.com/47939832/111868196-dcba0400-89bb-11eb-9f7f-4a033ac73196.png)
+        
+        초록색 -> 상대방 이메일
+        
+        빨간색 -> 자신의 이메일
+        
+        파란색 -> 자신의 이메일 2차 인증 비밀번호
+        
+        이때, 보내는 상대는 ???@kakao.com 임을 알 수 있습니다. 카카오 이메일로 세팅하는 이유는 카카오톡 알림 서비스를 구현하기 위함입니다. 
+        
+        카카오 이메일로 보내게 된다면 카카오 톡비서 죠르디 라는 알림봇이 관심친구로 등록한 이메일이 도착했을 때 카카오톡으로 톡을 보내게 됩니다. 
+        
+        이렇게 카카오톡의 서비스를 응용해 간단하게 알림톡을 만들 수 있었습니다.
+        
+        이렇게 values.yaml 파일을 모두 수정한 후, helm upgrade 명령어를 입력하여 수정해주면 클러스터 상태에 문제가 생겼을 때마다 알림톡을 받을 수 있게 됩니다.
+        
+### 라즈베리파이(스마트팩토리디바이스)와 그라파나에 데이터베이스 시각화
+
+- 우선적으로 우리 팀프로젝트에서 구현하고자 하는 것은 우리팀이 구축한 쿠버네티스 환경 인프라에서 스마트 팩토리 사고 방지 서비스를 구현하고자 하는 것입니다. 이 스마트 팩토리 사고방지 서비스는 서울에 라즈베리파이(HW, 엣지클라우드)를, 광주는 언리얼(SW, 엣지클라우드)을 이용해 구현했습니다.
+    
+    1. 우선, 라즈베리파이(서울, 스마트팩토리)에 여러 센서들(온도센서, 진동센서 등등)을 동작시켜 기준 값, threshold 값을 넘어서면 코어 클라우드(대전)으로 사고 data를 수집합니다. 수집한 data를 데이터베이스에 저장함과 동시에 알림 서비스를 이용해 모니터링 관리자에게 사고가 났음을 알려줍니다. 이렇게 코어 클라우드와 엣지 클라우드를 나눈 이유는 엣지에서 사고 여부를 직접적으로 판단할 수 있으며 사고 판단을 더욱 빠르게 할 수 있다는 장점이 있습니다.
+    2. 또한, 이러한 서비스를 확장하여 코어 클라우드로 사고 data만을 수집하여 분석해 적절한 조치를 내릴 수 있는 서비스를 구현할 수 있습니다. ex) 사고가 일어나는 주기, 원인을 파악하여 적절한 조치를 취해줄 수 있습니다.
+    3. 아래 그래프는 K.F.C 팀이 구현한 데이터베이스 시각화입니다.
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111868398-045d9c00-89bd-11eb-86d7-f275e434e43d.png)
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111868399-04f63280-89bd-11eb-9a60-39c25ae9695a.png)
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111868400-058ec900-89bd-11eb-8e56-009104afd7a9.png)
+        
+        아래 사진은 라즈베리파이로 구현한 HW 결과물입니다.
+        
+        ![4](https://user-images.githubusercontent.com/47939832/111868401-058ec900-89bd-11eb-84b7-fe001f7eaed1.png)
+        
+    4. 이제부터 어떻게 데이터베이스와 그라파나를 연동했는지 그 과정에 대해 기술하겠습니다.
+        
+        - mysql + grafana 연동
+            
+            우선 mysql-pv.yaml파일과 mysql-deployment.yaml 파일을 작성하고 mysql-pv.yaml과 mysql-deployment.yaml을 배포합니다.
+            
+            ~~~
+            kubectl apply -f mysql-pv.yaml
+            apiVersion: v1
+            kind: PersistentVolume
+            metadata:
+              name: mysql-pv-volume
+              labels:
+                type: local
+            spec:
+              storageClassName: manual
+              capacity:
+                storage: 20Gi
+              accessModes:
+                - ReadWriteOnce
+              hostPath:
+                path: "/mnt/data"
+            ---
+            apiVersion: v1
+            kind: PersistentVolumeClaim
+            metadata:
+              name: mysql-pv-claim
+            spec:
+              storageClassName: manual
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 20Gi
+
+            kubectl apply -f mysql-deployment.yaml
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: mysql
+            spec:
+              ports:
+              - port: 3306
+              selector:
+                app: mysql
+              clusterIP: None
+            ---
+            apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+            kind: Deployment
+            metadata:
+              name: mysql
+            spec:
+              selector:
+                matchLabels:
+                  app: mysql
+              strategy:
+                type: Recreate
+              template:
+                metadata:
+                  labels:
+                    app: mysql
+                spec:
+                  containers:
+                  - image: mysql:5.7
+                    name: mysql
+                    env:
+                      # Use secret in real usage
+                    - name: MYSQL_ROOT_PASSWORD
+                      value: password
+                    ports:
+                    - containerPort: 3306
+                      name: mysql
+                    volumeMounts:
+                    - name: mysql-persistent-storage
+                      mountPath: /var/lib/mysql
+                  volumes:
+                  - name: mysql-persistent-storage
+                    persistentVolumeClaim:
+                      claimName: mysql-pv-claim
+                  nodeSelector:
+                    my: sql2
+            ~~~
+            
+            위 명령어를 모두 배포했다면 다음과 같이 mysql pod가 정상적으로 배포되었음을 확인할 수 있습니다.
+            
+            ![5](https://user-images.githubusercontent.com/47939832/111868402-06275f80-89bd-11eb-8676-04ad252db396.png)
+            
+            이제 배포된 mysql pod를 이용해 mysql client 서버를 open 하겠습니다.
+            
+            > kubectl run -it --rm --image=mysql:5.7 --restart=Never mysql-client -- mysql -h mysql -ppassword
+            > 
+            
+            ![6](https://user-images.githubusercontent.com/47939832/111868403-06275f80-89bd-11eb-9824-198fa856fdc7.png)
+            
+            ![7](https://user-images.githubusercontent.com/47939832/111868404-06bff600-89bd-11eb-8338-7aa8506f91ba.png)
+            
+            -> 위 테이블 데이터를 이용해 그라파나에 연동했습니다.
+            
+            연동하는 방법은 다음과 같습니다. <데이터베이스에 테이블을 생성한 후>
+            
+                > mysql > create user userid@localhostidentified by'비밀번호';  //사용자를 추가하면서 패스워드를 설정
+                > 
+                > create user 'userid'@'%'identified by'비밀번호'; // %의 의미는 외부에서의 접근을 허용한다는 의미
+                > 
+                > mysql> GRANT ALL privileges ON DB명.* TO 계정아이디@locahostIDENTIFIED BY '비밀번호';
+                > 
+                > mysql> GRANT ALL privileges ON DB명.* TO 계정아이디@'%'IDENTIFIED BY '비밀번호'; // 3, 4번은 데이터베이스 사용자에게 사용권한을 부여하는 작업
+                > 
+                > mysql > flush privileges;    // 변경된 내용을 메모리에 반영(권한 적용)
+                > 
+                
+                모든 작업이 마무리 된 후, mysql의 클러스터 ip를 복사한 후, 그라파나 데이터소스에 추가합니다.
+                
+                ![8](https://user-images.githubusercontent.com/47939832/111868405-06bff600-89bd-11eb-90f9-f02e2f5d3ab2.png)
+                
+                ![9](https://user-images.githubusercontent.com/47939832/111868407-07588c80-89bd-11eb-8614-7c66389d103f.png)
+                
+                ![91](https://user-images.githubusercontent.com/47939832/111868409-07f12300-89bd-11eb-9fc5-d2993bcb0554.png)
+                
+                다음과 같이 세팅 후, Save & Test 버튼을 입력해 줍니다.
+                
+                연동이 성공했으면
+                
+                ![92](https://user-images.githubusercontent.com/47939832/111868410-07f12300-89bd-11eb-8453-b8b069c2a723.png)
+                
+                대시보드 생성을 통해 데이터베이스를 시각화 시켜줄 수 있습니다.
+                
+                아래 캡처화면은 결과 화면입니다.
+                
+                ![93](https://user-images.githubusercontent.com/47939832/111868411-0889b980-89bd-11eb-8a61-8a1cced7f0b9.png)
+                
+                아래 그래프화면은 엣지 클라우드(서울 공장)에서 즉시 모니터링 할 수 있는 화면입니다.
+                
+                ![94](https://user-images.githubusercontent.com/47939832/111868412-0889b980-89bd-11eb-8d0f-b31b3e4bae61.png)
+
+        
+
+### frontend backend 배포
+
+- Frontend, backend container 설정
+    
+    - 이미 쿠버네티스 클러스터는 구축했으니, 사용하고자 하는 컨테이너들을 배포하겠습니다.
+    - 앞서 설명했듯이 서울,대전,광주를 연결하여 클러스터를 구축했습니다. 대전을 core로, 서울과 광주를 각각 edge로 활용하여 대전에는 backend container를, 서울과 광주에는 frontend container를 배포하겠습니다.
+    - 기본적으로 쿠버네티스에서 컨테이너를 배포할 때 컨테이너를 Pod라는 단위에 넣어서 배포합니다, 이 때 pod를 따로 배포할 수 있지만 deployment라는 설계도를 작성하여 원하는 node에 원하는 설정을 하여 배포할 수도 있습니다. 다음은 서울에 배포할 frontend container의 deployment.yaml파일입니다
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111868728-f0b33500-89be-11eb-8650-b87e0b3daa85.png)
+        
+        이 deployment파일에서 image는 kotlin으로 구축한 frontend를 docker로 컨테이너 이미지화하여 docker hub에 올린 후 받아온 이미지입니다. Env는 환경변수로서 backend와 통신하기 위해 backend의 ip주소 및 port번호를 설정했습니다.
+        
+        여기서 중요한 것은 nodeSelector입니다. 기본적으로 master에서 deployment를 apply하면 replicas수에 따라 모든 node에 배포가 됩니다. 예를들어 replicas가 3이면 무작위로 3개의 node에 pod가 각각 하나씩 생성이 됩니다. 그렇게 할 경우 front container가 backend로 사용할 대전에도 배포가 될 수 있습니다. 이를 방지하고자 사용자가 원하는 node에만 pod를 배포할 수 있게 하는 개념이 nodeSelector입니다. nodeSelector란 사용자가 기존에 worker node에 label을 붙여놓으면 nodeSelector를 통해 특정 label이 붙어있는 node만 선별하는 개념입니다. 즉, front container는 사용자가 role: front라는 label을 붙인 node만 찾아서 배포가 되도록 하는 것입니다. 이를 통해서 서울 node들에 label을 붙여놓으면 frontend container가 서울에만 배포가 되고 backend의 대전에 배포되는 일을 막을 수 있어 각 node 및 subnet의 역할을 확실히 할 수 있습니다.
+        
+    - 이어서 service를 알아보겠습니다.
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111868729-f14bcb80-89be-11eb-89d0-50309ae5e9a3.png)
+        
+        Service란 여러 개의 pod 혹은, 한 개의 pod를 묶는 개념입니다. 기본적으로 클러스터 내의 pod는 특별한 설정을 하지 않으면 클러스터 외부에서 접근을 할 수 없고 내부에서만 통신이 가능합니다. 그러나 service 중 Nodeport service를 사용한다면 pod들을 외부에 노출시켜 클러스터 외부와도 통신을 할 수 있게 됩니다. 이는 추후에 라즈베리파이와 클러스터의 frontend container와 통신을 하기 위해서 NodePort service를 사용해 외부에 노출시키겠습니다.
+        
+        Nodeport service에서 nodePort는 30000번대 대역의 포트번호를 이용해야하고 만약 설정하지 않으면 임의로 30000번대 대역의 포트번호가 설정이 됩니다. 또한 pod들을 묶어서 service로 설정할 때 어떤 pod들을 묶을지 결정할 때 selector를 사용합니다. 위 file에서는 app: front 인 pod들만 묶어서 service를 생성해 30900번 포트번호로 외부에 노출시키는 개념입니다.
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111868730-f1e46200-89be-11eb-8d19-de992b129c6d.png)
+        
+        그래서 kubectl get pods 명령어로 확인해보면 front pod가 배포된 걸 확인할 수 있고 kubectl get service 명령어를 사용하면
+        
+        ![4](https://user-images.githubusercontent.com/47939832/111868732-f1e46200-89be-11eb-9b71-e79d7ff72824.png)
+        
+        30900번 포트를 가지고 생성된 nodeport service를 확인 가능합니다.
+        
+        이제 크롬 브라우저에 pod가 배포된 ip주소:nodeport 번호 를 입력하면
+        
+        ![5](https://user-images.githubusercontent.com/47939832/111868733-f27cf880-89be-11eb-8adb-896fcfea50be.png)
+        
+        다음과 같이 클러스터 외부에 있는 로컬 pc에서도 클러스터의 컨테이너로 접속할 수 있음을 확인할 수 있습니다.
+        
+    - 이어서 backend container 배포를 알아보겠습니다. 기본적인 원리는 frontend와 모두 같습니다.
+        
+        ![6](https://user-images.githubusercontent.com/47939832/111868734-f27cf880-89be-11eb-86cb-6c42e8e41246.png)
+        
+        다만 이번엔 deployment파일과 service파일을 한번에 작성했다는 것입니다. 이처럼 여러 종류의 파일을 한 yaml파일에 작성하려면 ‘---‘ 를 사용해서 꼭 구분을 지어줘야합니다.
+        
+        이번에는 role : back이라는 label을 가진 node들만 골라서(대전 node들만 골라서) backend container를 배포하고 nodeport로 30001로 설정하겠습니다.
+        
+        ![7](https://user-images.githubusercontent.com/47939832/111868736-f3158f00-89be-11eb-8330-3b55713b2428.png)
+        
+        이렇게 pod들을 확인해보면 backend pod가 배포된 걸 확인가능합니다.
+        
+        그럼 현재 구조는 서울,대전의 node들로 클러스터를 구축하고 서울과 광주에는 frontend container, 대전에는 backend container가 배포되어 있는 상태입니다. 그럼 서로 다른 지역에 배포된 frontend와 backend가 잘 통신이 되는지 확인해보겠습니다.
+        
+        ![8](https://user-images.githubusercontent.com/47939832/111868737-f3158f00-89be-11eb-8705-89ffdf870779.png)
+        
+        대전에 위치한 master node에서 서울의 frontend container로 post를 보냈을 때 잘 수행되는 것을 확인할 수 있습니다.
+        
+    - 이제는 광주의 frontend를 확인해보겠습니다. 서울은 라즈베리파이와 통신이 되는 frontend image를 담아 배포했고 광주는 unreal 게임 엔진과 통신이 되는 frontend image를 담아 배포하겠습니다. 배포하는 원리는 서울과 같습니다.
+        
+        ![9](https://user-images.githubusercontent.com/47939832/111868738-f3ae2580-89be-11eb-8b45-7e08768cbc6e.png)
+        
+        마찬가지로 nodeport로 배포합니다. 만약 nodeport service로 배포했는데 브라우저에서 접속이 안된다면 컨테이너가 배포된 node에서 해당 포트가 열려있지 않았을 확률이 제일 높습니다. 따라서 VM이나 서버 자체의 보안그룹, 방화벽 등을 확인해서 해당 포트가 열려있는지 확인하면 되겠습니다.
+        
+        
+### 언리얼을 이용한 스마트팩토리 서비스
+
+- 언리얼을 이용한 스마트팩토리 사고 방지 서비스 데모
+    
+    - 블루프린트 구성
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111869245-c57e1500-89c1-11eb-9dbd-44f84b834b5c.png)
+        
+        다음과 같이 레벨 블루프린트에서 작업을 통해 스마트 팩토리 사고방지 서비스를 구현했습니다.
+        
+        여기서 웹브라우저와 언리얼이 통신하기 위해 varest 플러그인을 이용해 데이터를 주고 받는 것을 구현하는데 성공했습니다.
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111869248-c616ab80-89c1-11eb-998f-62a942969eea.png)
+        
+        위 블루프린트 과정은 언리얼과 웹브라우저 즉, K.F.C에서 구축한 웹페이지의 url을 언리얼과 연동하여 데이터를 주고받았습니다. 아래 사진은 이렇게 만든 블루프린트를 통해 만든 데모 영상중 한 장면을 캡처한 것입니다.
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111869249-c6af4200-89c1-11eb-84c3-063f90e2cb02.png)
+        
+        이와 같이 언리얼에서 트리거(ECA)를 웹브라우저로 동작하게 하여 화재 데이터 그래프가 동작함을 알 수 있습니다.
+
+### paasta 통합 웹페이지 배포
+
+**Paas-ta 배포**
+    
+- 오픈 paas 플랫폼 paas-ta에서 python 개발환경을 지원받아 python의 flask를 통해 웹페이지를 배포합니다.
+    
+    1. 먼저 window 혹은 linux를 사용하고 있다면 cf-cli 홈페이지에 가서 먼저 cf-cli를 다운받습니다. Cf-cli는 클라욷 파운더리의 명령도구입니다. Paas-ta가 기본적으로 클라우드파운더리 기반으로 설계되어 있어 사용합니다.
+    2. 그 후 cf login을 통해 paas-ta 계정에 접속합니다. Paas-ta에 공식적으로 계정을 발급받은 사람만 접속할 수 있습니다.(처음 로그인 할 때는 cf login -a ~~~ --skip ~~ 명령어를 수행해야 하지만 이미 로그인을 한 이력이 있으면 cf login만 해도 자동적으로 해당 계정으로 로그인이 가능합니다)
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111868955-50f6a680-89c0-11eb-912c-c018da12df5f.png)
+        
+        현재 생성되어 있는 앱을 확인해보고 싶으면 다음 명령어를 수행합니다.
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111868959-5227d380-89c0-11eb-825f-f391ce798c12.png)
+        
+        Paasa-ta 대쉬보드에서도 똑 같은 결과를 확인가능합니다
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111868961-52c06a00-89c0-11eb-98b9-2bc298d15125.png)
+        
+    3. 이어서 vmware 공식홈페이지에서 제공하는 cloud foundry를 통한 python app 배포 내용을 참고해 진행해봅시다 https://tanzu.vmware.com/developer/guides/python/cf-gs/
+        
+        다음은 web.py 파일로 paas-ta에 배포할 python 앱입니다.
+        
+        ![4](https://user-images.githubusercontent.com/47939832/111868962-52c06a00-89c0-11eb-9219-3afcec0d5224.png)
+        
+        코드를 보면 flask를 통해 배포하고 return render_template(‘pwook96.html’)을 통해서 pwook96.html파일을 브라우저에 띄우겠다는 걸 알 수 있습니다. 여기서 render_template함수를 사용하기 위해서는 render_template를 import해줘야하고 web.py가 있는 디렉토리에 따로 templates 디렉토리를 생성 후 그 디렉토리에 pwook96.html파일을 생성해야합니다.
+        
+        ![5](https://user-images.githubusercontent.com/47939832/111868963-53590080-89c0-11eb-8145-6c46b9d60d32.png)
+        
+        여기서 templates 디렉토리로 들어가서 띄우고자 하는 html파일을 생성합니다
+        
+        ![6](https://user-images.githubusercontent.com/47939832/111868964-53590080-89c0-11eb-9605-e081e1837f8b.png)
+        
+        한 번 pwook96.html파일을 보겠습니다.
+        
+        ![7-1](https://user-images.githubusercontent.com/47939832/111868966-53f19700-89c0-11eb-97ac-f4f5f557dcdb.png)
+        
+        ![7-2](https://user-images.githubusercontent.com/47939832/111868968-53f19700-89c0-11eb-91c1-ab04b8bbe801.png)
+        
+        서울과 광주의 공장 상태 모니터링 페이지, 그라파나를 통한 클러스터 및 DB 상태 모니터링 페이지로 넘어갈 수 있는 통합 웹페이지입니다.
+        
+    4. 이어서 paas-ta에 배포하기 위해 cf push 명령어를 사용합니다
+        
+        ![8](https://user-images.githubusercontent.com/47939832/111868970-548a2d80-89c0-11eb-9d18-077d99468a2c.png)
+        
+        Python-demo는 배포할 앱의 이름입니다. 이 때 따로 manifest.yaml파일을 만들어서 원하는 메모리 및 디스크 용량, 빌드팩 선정 등을 할 수 있지만 굳이 하지 않으면 모두 default 값으로 설정되고 빌드팩 같은 경우 모든 빌드팩을 설치 후 코드를 보고 python코드임을 인지해 python빌드팩을 자동으로 사용하게 됩니다. 배포가 다 되면 다시 paas-ta 대시보드로 돌아가서 확인할 수 있습니다.
+        
+        ![9](https://user-images.githubusercontent.com/47939832/111868971-548a2d80-89c0-11eb-8ca6-e32a021ab31e.png)
+        
+        배포된 앱을 클릭하여 라우트나 URL link를 클릭하면
+        
+        ![91](https://user-images.githubusercontent.com/47939832/111868973-5522c400-89c0-11eb-9cd7-34df218aab87.png)
+        
+        다음과 같은 통합 웹페이지로 접속이 됩니다. 이후 라즈베리파이 아이콘을 누르면 서울 공장 모니터링 페이지, 언리얼 아이콘을 누르면 광주 공장 모니터링 페이지, 가운데 그라파나 아이콘을 누르면 클러스터 및 DB 모니터링 페이지로 이동하게 됩니다.
+        
+    5. 아래 캡처화면은 서울 모니터링 페이지입니다.
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111869154-438dec00-89c1-11eb-81c9-591271110d69.png)
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111869155-44bf1900-89c1-11eb-8310-1bb0bf29af48.png)
+        
+# 최종 시연 영상
+
+<iframe width="640" height="360" src="https://www.youtube.com/watch?v=E5ArMEd9lHQ" frameborder="0" gesture="media" allowfullscreen=""></iframe>
