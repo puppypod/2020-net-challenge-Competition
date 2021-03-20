@@ -217,3 +217,342 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
 - 앞서 kubernetes와 calico를 이용해 멀티 사이트 클러스터를 구축했습니다. 이어서 calico에서 지원하는 calicoctl 명령어를 알아보도록 하겠습니다. 본 정리에서는 calicoctl 명령어를 /usr/local/bin 디렉토리에 설치하였습니다.(calico 공식 홈페이지에서 예시로 든 디렉토리)
     
     다음 명령어를 통해 calicoctl binary를 설치합니다.
+    
+    ![1](https://user-images.githubusercontent.com/47939832/111865377-0b2ee380-89aa-11eb-80b9-da776518d6bc.png)
+    
+    이후에 calicoctl의 권한을 수정해주기 위해 다음 명령어를 실행합니다.
+    
+    ![2](https://user-images.githubusercontent.com/47939832/111865383-1255f180-89aa-11eb-86b1-7437ad693bbd.png)
+    
+    Calicoctl을 설치하기 위해서 docker hub에서 pull 받아옵니다.
+    
+    ![3](https://user-images.githubusercontent.com/47939832/111865384-12ee8800-89aa-11eb-96cf-bef09148a598.png)
+    
+    이후 calicoctl을 Kubernetes cluster에 배포합니다.
+    
+    ![4](https://user-images.githubusercontent.com/47939832/111865385-13871e80-89aa-11eb-885d-278b01ec5d23.png)
+    
+    ![5](https://user-images.githubusercontent.com/47939832/111865387-13871e80-89aa-11eb-97cc-a8929db1e02e.png)
+    
+    Calicoctl이 설치된 것을 확인할 수 있습니다.
+    
+    배포 후에 calicoctl 명령어를 설정해줍니다.
+    
+    ![6](https://user-images.githubusercontent.com/47939832/111865388-141fb500-89aa-11eb-9d8b-4f940a2e1007.png)
+    
+    보면 알겠지만 calicoctl은 결국 kubectl을 사용한 긴 명령어를 alias 시킨 것이다. 이후 calicoctl을 간단하게 사용해보면
+    
+    ![7](https://user-images.githubusercontent.com/47939832/111865390-141fb500-89aa-11eb-8f4b-268859215a82.png)
+    
+    이처럼 kubectl get nodes 를 했을 때 처럼 클러스터 내의 node들이 출력이 되는 것을 확인할 수 있습니다. 
+    
+    앞서 진행했던
+    
+    ![8](https://user-images.githubusercontent.com/47939832/111865391-14b84b80-89aa-11eb-95fc-70847dacd1e2.png)
+    
+    에서 wget 명령어로 calicoctl.yaml을 다운받아 vim으로 열어보면
+    
+    ![9](https://user-images.githubusercontent.com/47939832/111865393-14b84b80-89aa-11eb-8901-6bc231f2ef94.png)
+    
+    Calicoctl 명령어로 확인 및 수정할 수 있는 resource들을 확인할 수 있다. 여기서는 ippool을 확인해보기 위해 다음 명령어를 사용합니다.
+    
+    ![91](https://user-images.githubusercontent.com/47939832/111865394-1550e200-89aa-11eb-8026-54966548104d.png)
+    
+    Ippool을 확인해보면 초기에 클러스터 구축시 kubeadm init 명령어로 pod-cidr을 설정할 때 설정했던 10.234.0.0/16을 확인할 수 있다. 이를 자세히 보기 위해 다음 명령어를 사용합니다
+    
+    ![92](https://user-images.githubusercontent.com/47939832/111865395-1550e200-89aa-11eb-9c5f-633cad2662b6.png)
+    
+    ![93](https://user-images.githubusercontent.com/47939832/111865397-15e97880-89aa-11eb-909a-50100d029171.png)
+    
+    그럼 다음과 같은 ippool file을 확인할 수 있고 처음 클러스터 구축할 때 vxlan mode로 설정했기 때문에 IPIP mode는 Never, vxlan mode가 always로 되어있는 걸 알 수 있습니다. 처음 클러스터 구축 할 때 만약 IPIP mode로 구축하면 vxlan mode로 바꿀 수 없으므로 처음부터 wget 명령어로 calico.yaml을 받아와 수정하여 vxlan mode로 바꿨던 것을 기억해봅시다. 그럼 만약 vxlan mode로 클러스터를 구축하고 컨테이너들을 배포했는데 IPIP mode로 전환이 필요하다면 클러스터를 삭제하고 다시 해야할까요?? 그런 번거로움을 여기서 해결할 수 있습니다. ippool에서 IPIP mode를 다시 Always로 수정하고 vxlan mode를 Never로 수정한 후에 calicoctl apply를 해주면 됩니다.
+    
+    ![94](https://user-images.githubusercontent.com/47939832/111865399-15e97880-89aa-11eb-9cd1-a215b20a5aac.png)
+    
+    ![95](https://user-images.githubusercontent.com/47939832/111865400-16820f00-89aa-11eb-93e1-aedfa6c7b81d.png)
+    
+
+## 쿠버네티스 환경에서의 helm설치 및 helm을 이용해 프로메테우스, 그라파나 배포
+
+- **helm 2.0 설치 방법**
+    - 헬름 클라이언트는 깃허브에서 다운로드 가능
+        
+        > wget https://get.helm.sh/helm-v2.16.6-linux-amd64.tar.gz
+        > 
+        > tar xvzf helm-v2.16.6-linux-amd64.tar.gz
+        > 
+        > sudo cplinux-amd64/tiller/usr/local/bin
+        > 
+        > sudo cplinux-amd64/helm/usr/local/bin
+        > 
+        > sudo chownroot:docker/usr/local/bin/tiller
+        > 
+        > sudo chownroot:docker/usr/local/bin/helm
+    
+    - 헬름이 잘 설치 되어 있는지 확인
+        > helm version
+        > 
+        
+        -> 확인을 해보면 클라이언트는 정상적으로 설치되었지만, 'helm server-틸러'는 에러가 나는 것을 알 수 있습니다.
+        
+    - helm server - tiller 설치하기
+        
+        ~~~
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+            name: tiller
+          namespace: kube-system
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: tiller
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+          - kind: ServiceAccount
+                name: tiller
+            namespace: kube-system
+        ~~~
+        
+    - 이후 kubectl apply -f tiller.yaml 명령어를 입력하여 클러스터에 적용시켜줍니다.
+
+    - tiller 설치
+        
+        > helm init--service-account tiller
+        
+    - tiller 설치 확인
+        
+        > helm version
+        > 
+        
+        -> 클라이언트와 서버가 정상적으로 동작되는 것을 확인할 수 있습니다.
+        
+    - helm 저장소 업데이트
+        
+        > helm repo update
+        > 
+
+- **helm chart를 활용하여 프로메테우스, 그라파나, alertmanager 쿠버네티드에 적용하기 ( 이 방법은 helm 2 version으로 진행한 것입니다. )**
+    
+    - helm chart 설치
+        
+        helm chart는 쿠버네티스에서 package manager 역할을 합니다. 이때, chart를 통해 yaml 파일을 등록하여 저장하는 저장소의 역할을 합니다. 쿠버네티스만을 이용한다면 컨테이너 배포 및 환경 세팅하는 과정에서 어려움을 느낄 수 있습니다. 이러한 이유로 개발자들은 환경 세팅하는 것에서부터 포기하는 경우가 많습니다. 이러한 문제점을 해결해준 것이 helm입니다.
+        
+        helm의 repository는 깃허브에 등록되어 있어 누구나 다운로드를 받아 사용하실 수 있습니다.
+        
+        > git clone https://github.com/helm/charts.git
+        > 
+        
+        -> 위와 같이 깃허브에서 다운로드를 받으면 chart repository를 확인할 수 있으며 다양한 패키지들이 제공됩니다. helm에서는 보통 안정된 버전이 Chart를 활용하는 것을 추천합니다.
+        
+        ![1](https://user-images.githubusercontent.com/47939832/111865926-55fe2a80-89ad-11eb-8d22-9d79e73f9610.png)
+        
+    - ../stable -> grafana, kube-state-metrics, prometheus-node-exporter, prometheus-operator 패키지 설치
+        
+        우선적으로 그라파나와 프로메테우스, alertmanager를 동작시키기 위해서 stable 디렉토리에 존재하는 grafana, kube-state-metrics, prometheus-node-exporter, prometheus-operator 디렉토리들을 복사하여 하나의 디렉토리 파일로 새롭게 생성합니다.
+        
+        ![2](https://user-images.githubusercontent.com/47939832/111865929-572f5780-89ad-11eb-95aa-1e202c43debd.png)
+        
+        하나의 chart는 'templates'와 'values'로 구성되어 있습니다. 이때, templates는 쿠버네티스의 deployment, service 등의 쿠버네티스 오브젝트들의 templates를 정희해 놓은 yaml 파일 들입니다. values.yaml 파일은 template의 yaml 파일들에 적용할 변수들을 넣어줄 파일입니다.
+        
+        chart는 참조해야 하는 라이브러리 파일입니다.
+        
+        정리하자면 하나의 chart를 등록하려면 템플릿에 정의 된 yaml파일을 만들기 위해 values.yaml 파일을 수정하며 또 다른 chart의 패키징된 파일을 저장해야 합니다.
+        
+        helm은 client-server 구조를 취하고 있습니다.(helm 3은 클라이언트 서버가 통합되어 있습니다.) 즉, 사용자가 사용하는 CLI(command line interface)가 helm이며 쿠버네티스에서 배포하고 관리하는 서버를 tiller라고 부릅니다. 그래서 우선적으로 helm을 설치하고 tiller를 서버에 배포하여 사용하게 되는 것입니다.
+        
+    - node에 label을 붙여 helm chart 관리하기 -> kfc-dj2노드에 key=monitoring 노드라벨 붙이기
+        
+        ![3](https://user-images.githubusercontent.com/47939832/111865930-572f5780-89ad-11eb-8f43-64387b474a81.png)
+        
+    - kfc-dj2 노드에 key=monitoring 라벨 붙이기
+        
+        ![4](https://user-images.githubusercontent.com/47939832/111865932-57c7ee00-89ad-11eb-86ce-ff09aee08ef4.png)
+        
+        각 패키지 라이브러리의 values.yaml 파일로 들어가 nodeSelector 부분을 key : monitoring으로 수정해 줍니다.
+        
+    - grafana, kube-state-metrics, prometheus-node-exporter에 대하여 패키지화 하여 charts 디렉토리를 생성해 charts디렉토리에 추가
+        
+        ~~~
+        helm package grafana/
+        helm package kube-state-metrics/
+        helm package prometheus-node-exporter/
+        mv *.tgz prometheus-operator/charts/
+        ~~~
+        
+        chars 디렉토리에 grafana, kube-state-metrics, prometheus-node-exporter 패키지 파일들이 존재하는지 확인합니다.
+        
+        ~~~
+        ls -la prometheus-operator/charts/
+        ~~~
+        
+        ![5](https://user-images.githubusercontent.com/47939832/111865933-57c7ee00-89ad-11eb-98a8-795cc51c4039.png)
+        
+    - grafana와 prometheus alertmanage가 사용하는 pv.yaml 파일 등록
+        
+        ~~~
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: pv-for-alertmanager
+        spec:
+          capacity:
+           storage: 50Gi
+         volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          nfs:
+            path: /root/nfs/alertmanager
+            server: 103.22.222.246
+        ---
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: pv-for-grafana
+        spec:
+          capacity:
+            storage: 10Gi
+          volumeMode: Filesystem
+          accessModes:
+            - ReadWriteOnce
+          persistentVolumeReclaimPolicy: Retain
+          nfs:
+            path: /root/nfs/grafana
+            server: 103.22.222.246
+        ~~~
+        
+        ![6](https://user-images.githubusercontent.com/47939832/111865934-58608480-89ad-11eb-81ba-9fa111ac3003.png)
+        
+        -> 이때 server의 IP는 kfc-dj2 즉, key=monitoring 라벨을 붙인 노드의 IP입니다.	
+        
+        이후, kubectl create -f pv.yaml 커멘드를 입력합니다.
+        
+    - helm install을 활용한 helm chart 등록
+        
+        ![7](https://user-images.githubusercontent.com/47939832/111865936-58608480-89ad-11eb-897a-d8cc03937987.png)
+        
+        위 디렉토리에서 helm install --name prometheus --namespace monitoring . 명령어를 입력합니다.
+        
+        시간이 꽤 걸리니 몇분 기다리셔야 합니다.
+        
+    - 정상적으로 빼포되었는지 확인
+        
+        ~~~
+        kubectl get all -n monitoring
+        ubuntu@kfc-dj:~/kfcHelm/charts/myhelm/prometheus-operator$ kubectl get all -n monitoring
+        NAME                                                         READY   STATUS    RESTARTS   AGE
+        pod/alertmanager-prometheus-prometheus-oper-alertmanager-0   2/2     Running   0          32d
+        pod/prometheus-grafana-69fdcbf946-w7sm8                      2/2     Running   0          33d
+        pod/prometheus-kube-state-metrics-6bc5d5dc67-p9ntg           1/1     Running   2          33d
+        pod/prometheus-prometheus-node-exporter-6bddh                1/1     Running   2          56d
+        pod/prometheus-prometheus-node-exporter-8wrss                1/1     Running   2          56d
+        pod/prometheus-prometheus-node-exporter-b7hkb                1/1     Running   2          56d
+        pod/prometheus-prometheus-node-exporter-hqcsx                1/1     Running   2          48d
+        pod/prometheus-prometheus-node-exporter-m5ngz                1/1     Running   1          56d
+        pod/prometheus-prometheus-node-exporter-rtz77                1/1     Running   2          56d
+        pod/prometheus-prometheus-oper-operator-79cd655689-f6n5k     2/2     Running   1          33d
+        pod/prometheus-prometheus-prometheus-oper-prometheus-0       3/3     Running   0          32d
+
+        NAME                                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+        service/alertmanager-operated                     ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP   56d
+        service/prometheus-grafana                        NodePort    10.102.125.63    <none>        80:30010/TCP                 56d
+        service/prometheus-kube-state-metrics             ClusterIP   10.109.54.193    <none>        8080/TCP                     56d
+        service/prometheus-operated                       ClusterIP   None             <none>        9090/TCP                     56d
+        service/prometheus-prometheus-node-exporter       ClusterIP   10.103.214.146   <none>        9100/TCP                     56d
+        service/prometheus-prometheus-oper-alertmanager   ClusterIP   10.103.86.243    <none>        9093/TCP                     56d
+        service/prometheus-prometheus-oper-operator       ClusterIP   10.98.119.171    <none>        8080/TCP,443/TCP             56d
+        service/prometheus-prometheus-oper-prometheus     NodePort    10.108.25.24     <none>        9090:30011/TCP               56d
+
+        NAME                                                 DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+        daemonset.apps/prometheus-prometheus-node-exporter   6         6         6       6            6           <none>          56d
+
+        NAME                                                  READY   UP-TO-DATE   AVAILABLE   AGE
+        deployment.apps/prometheus-grafana                    1/1     1            1           56d
+        deployment.apps/prometheus-kube-state-metrics         1/1     1            1           56d
+        deployment.apps/prometheus-prometheus-oper-operator   1/1     1            1           56d
+
+        NAME                                                             DESIRED   CURRENT   READY   AGE
+        replicaset.apps/prometheus-grafana-69fdcbf946                    1         1         1       56d
+        replicaset.apps/prometheus-kube-state-metrics-6bc5d5dc67         1         1         1       56d
+        replicaset.apps/prometheus-prometheus-oper-operator-79cd655689   1         1         1       56d
+
+        NAME                                                                    READY   AGE
+        statefulset.apps/alertmanager-prometheus-prometheus-oper-alertmanager   1/1     56d
+        statefulset.apps/prometheus-prometheus-prometheus-oper-prometheus       1/1     56d
+        ubuntu@kfc-dj:~/kfcHelm/charts/myhelm/prometheus-operator$
+        ~~~
+        
+        위와같이 정상 배포되었는지 확인할 수 있습니다.
+        
+    - prometheus-node-exporter는 모든 노드에 배포되어 있으며 나머지 패키지들은 kfc-dj2 즉, key=monitoring에 배포 되어 있어야함.
+        
+        ~~~
+        ubuntu@kfc-dj:~/kfcHelm/charts/myhelm/prometheus-operator$ kubectl get pod -n monitoring -o wide
+        NAME                                                     READY   STATUS    RESTARTS   AGE   IP               NODE               NOMINATED NODE   READINESS GATES
+        alertmanager-prometheus-prometheus-oper-alertmanager-0   2/2     Running   0          32d   10.234.211.87    kfc-dj2            <none>           <none>
+        prometheus-grafana-69fdcbf946-w7sm8                      2/2     Running   0          33d   10.234.211.84    kfc-dj2            <none>           <none>
+        prometheus-kube-state-metrics-6bc5d5dc67-p9ntg           1/1     Running   2          33d   10.234.211.85    kfc-dj2            <none>           <none>
+        prometheus-prometheus-node-exporter-6bddh                1/1     Running   2          56d   103.22.222.245   kfc-dj             <none>           <none>
+        prometheus-prometheus-node-exporter-8wrss                1/1     Running   2          56d   103.22.222.247   kfc-dj3            <none>           <none>
+        prometheus-prometheus-node-exporter-b7hkb                1/1     Running   2          56d   103.22.222.246   kfc-dj2            <none>           <none>
+        prometheus-prometheus-node-exporter-hqcsx                1/1     Running   2          48d   116.89.190.210   ssu-nc-in-gist-1   <none>           <none>
+        prometheus-prometheus-node-exporter-m5ngz                1/1     Running   1          56d   116.89.189.54    master             <none>           <none>
+        prometheus-prometheus-node-exporter-rtz77                1/1     Running   2          56d   116.89.189.21    worker-1           <none>           <none>
+        prometheus-prometheus-oper-operator-79cd655689-f6n5k     2/2     Running   1          33d   10.234.211.86    kfc-dj2            <none>           <none>
+        prometheus-prometheus-prometheus-oper-prometheus-0       3/3     Running   0          32d   10.234.211.88    kfc-dj2            <none>           <none>
+        ubuntu@kfc-dj:~/kfcHelm/charts/myhelm/prometheus-operator$
+        ~~~
+        
+        ![8](https://user-images.githubusercontent.com/47939832/111865939-58f91b00-89ad-11eb-91fb-23138d552d3e.png)
+        
+    - grafana와 prometheus의 NodePort를 구성합니다. 이때, nodeport 번호는 중복되지 않도록 합니다.
+        
+        ![9](https://user-images.githubusercontent.com/47939832/111865940-5991b180-89ad-11eb-90ed-c229691c4be3.png)
+        
+        아래 명령어를 입력 후, 수정합니다.
+        
+        > kubectl edit svc prometheus-grafana -n monitoring
+        > 
+        
+        ![91](https://user-images.githubusercontent.com/47939832/111865941-5991b180-89ad-11eb-951e-0c9095bbd955.png)
+        
+        > kubectl edit svc prometheu-prometheus-oper-prometheus -n monitoring
+        > 
+        
+        ![92](https://user-images.githubusercontent.com/47939832/111865942-5a2a4800-89ad-11eb-9423-bb632ce3a907.png)
+        
+        위와 같이 svc를 수정 후, 편집한 서비스를 재확인해 보면
+        
+        ![93](https://user-images.githubusercontent.com/47939832/111865943-5a2a4800-89ad-11eb-8802-47b06e72f62a.png)
+        
+        다음과 같음을 알 수 있습니다.
+        
+    - grafana 확인
+        
+        기본 설정 id와 password는
+        
+        'admin', 'prom-operator' 입니다.
+        
+        ![94](https://user-images.githubusercontent.com/47939832/111865944-5ac2de80-89ad-11eb-9d90-c91930b7dcbe.png)
+        
+        로그인 후 화면은 아래와 같습니다.
+        
+        ![95](https://user-images.githubusercontent.com/47939832/111865945-5ac2de80-89ad-11eb-96c3-0b1ebbba7e99.png)
+        
+        manage 메뉴로 들어갑니다.
+        
+        ![96](https://user-images.githubusercontent.com/47939832/111865946-5b5b7500-89ad-11eb-80d6-9faec4a8c182.png)
+        
+        다음과 같이 그라파나가 관리하고 있는 클러스터의 상태를 확인해 볼 수 있습니다.
+        
+        ![97](https://user-images.githubusercontent.com/47939832/111865947-5b5b7500-89ad-11eb-9396-b0e64ebf2471.png)
+        
+        ![98](https://user-images.githubusercontent.com/47939832/111865948-5bf40b80-89ad-11eb-8b14-227b407e715a.png)
+        
+        마찬가지로 prometheus와 prometheus alertmanager에도 접근할 수 있습니다.
+        
+        만약 helm values.yaml을 수정하려면 helm upgrade 명령어를 사용하시면 됩니다. 또한, 만약 release가 잘못되었다면 helm rollback 명령어를 통해 롤백이 가능합니다.
