@@ -214,4 +214,6 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
 ## 쿠버네티스 환경 설정 과정 中 Calico 세팅 방법
 
 
-
+- 앞서 kubernetes와 calico를 이용해 멀티 사이트 클러스터를 구축했습니다. 이어서 calico에서 지원하는 calicoctl 명령어를 알아보도록 하겠습니다. 본 정리에서는 calicoctl 명령어를 /usr/local/bin 디렉토리에 설치하였습니다.(calico 공식 홈페이지에서 예시로 든 디렉토리)
+    
+    다음 명령어를 통해 calicoctl binary를 설치합니다.
