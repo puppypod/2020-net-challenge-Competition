@@ -171,7 +171,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
                 
                 ![998](https://user-images.githubusercontent.com/47939832/111864007-f3536180-89a1-11eb-9da7-5d1668e4a971.png)
                 
-        3. vxlan mode로 클러스터를 구축하는 방법
+        3. **vxlan mode로 클러스터를 구축하는 방법**
             
             - 현재까지 kubernetes와 calico를 통해 클러스터를 구축하는 과정을 알아봤습니다. Calico의 default mode는 IPIP mode입니다. IPIP와 vxlan 모두 훌륭한 overlay network이지만 Azure같은 경우 IPIP mode를 지원하지 않는 경우도 있고 IPIP를 사용할 시 openstack 보안그룹에서 따로 설정도 해줘야하는 경우가 있을 수 있습니다. 따라서 IPIP 뿐만 아니라 vxlan mode로도 클러스터를 구축하는 방법을 알아보겠습니다.(참고로 이미 IPIP 모드로 클러스터 구축 시, vxlan mode로 변환하려면 calicoctl이라는 명령어를 사용해야합니다. 우선은 처음부터 vxlan mode로 클러스터를 구축하는 법을 알아보겠습니다)
                 
