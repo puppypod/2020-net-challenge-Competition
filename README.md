@@ -22,7 +22,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
 - 공장 관리자는 한 웹페이지를 통해서 공장 디바이스들의 데이터, 공장의 상태 등을 어디서든 쉽게 확인 가능
 
 
-**// 목차**
+## 목차
 
 - [kubernetes cluster 구축 (IPIP,vxlan)](#kubernetes-cluster-구축-IPIPvxlan)
 - [쿠버네티스 환경 설정 과정 中 Calico 세팅 방법](#쿠버네티스-환경-설정-과정-中-Calico-세팅-방법)
@@ -36,6 +36,8 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
 - [최종 시연 영상](#최종-시연-영상)
 
 ## kubernetes cluster 구축 (IPIP,vxlan)
+
+[목차](#)
 
 - 지금부터 마스터 노드와 워커노드, Kubernetes, calico의 vxlan mode로 클러스터를 구축하는 법을 알아보겠습니다.
 
