@@ -312,13 +312,13 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         > 
         > tar xvzf helm-v2.16.6-linux-amd64.tar.gz
         > 
-        > sudo cplinux-amd64/tiller/usr/local/bin
+        > sudo cp linux-amd64/tiller /usr/local/bin
         > 
-        > sudo cplinux-amd64/helm/usr/local/bin
+        > sudo cp linux-amd64/helm /usr/local/bin
         > 
-        > sudo chownroot:docker/usr/local/bin/tiller
+        > sudo chown root:docker /usr/local/bin/tiller
         > 
-        > sudo chownroot:docker/usr/local/bin/helm
+        > sudo chown root:docker /usr/local/bin/helm
     
     - 헬름이 잘 설치 되어 있는지 확인
         > helm version
