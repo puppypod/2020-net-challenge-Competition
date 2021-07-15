@@ -332,7 +332,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         apiVersion: v1
         kind: ServiceAccount
         metadata:
-            name: tiller
+          name: tiller
           namespace: kube-system
         ---
         apiVersion: rbac.authorization.k8s.io/v1
@@ -345,7 +345,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
           name: cluster-admin
         subjects:
           - kind: ServiceAccount
-                name: tiller
+            name: tiller
             namespace: kube-system
         ~~~
         
