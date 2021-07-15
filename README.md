@@ -368,21 +368,25 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         > 
 
 
-    **2021.07.15. 해당 헬름은 현재 지원하지 않는 버전으로 새로운 v2.17.0을 가져왔습니다. 아래 간단하게 헬름을 설치하는 방법을 알려드리겠습니다.(직접 테스트하여 확인해보았습니다.)**
+    **(2021.07.15.) 해당 헬름은 현재 지원하지 않는 버전으로 새로운 v2.17.0을 가져왔습니다. 아래 간단하게 헬름을 설치하는 방법을 알려드리겠습니다.(직접 테스트하여 확인해보았습니다.)**
     
       - 설치 스크립트를 다운로드 받고 실행하기
+        
         ~~~
         $ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get > get_helm.sh
         $ chmod 700 get_helm.sh
         $ ./get_helm.sh
         ~~~
+      
       - 설치 완료 후 헬름 초기화 및 틸러 설치
+        
         ~~~
         $ kubectl -n kube-system create sa tiller
         $ kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
         $ helm init --service-account tiller
         $ helm repo update
         ~~~
+
 
 - **helm chart를 활용하여 프로메테우스, 그라파나, alertmanager 쿠버네티드에 적용하기 ( 이 방법은 helm 2 version으로 진행한 것입니다. )**
     
