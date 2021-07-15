@@ -405,7 +405,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         
     - ../stable -> grafana, kube-state-metrics, prometheus-node-exporter, prometheus-operator 패키지 설치
         
-        우선적으로 그라파나와 프로메테우스, alertmanager를 동작시키기 위해서 stable 디렉토리에 존재하는 grafana, kube-state-metrics, prometheus-node-exporter, prometheus-operator 디렉토리들을 복사하여 하나의 디렉토리 파일로 새롭게 생성합니다.
+        우선적으로 그라파나와 프로메테우스, alertmanager를 동작시키기 위해서 stable 디렉토리에 존재하는 grafana, kube-state-metrics, prometheus-node-exporter, prometheus-operator 디렉토리들을 복사하여 하나의 디렉토리 파일로 새롭게 생성합니다.((2021.07.15)깨알 정보 : https://javaoop.tistory.com/39)
         
         ![2](https://user-images.githubusercontent.com/47939832/111865929-572f5780-89ad-11eb-95aa-1e202c43debd.png)
         
