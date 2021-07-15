@@ -454,7 +454,7 @@ K.F.C 팀 구성원 : 박재욱, 선훈식, 황태관, 조의진
         spec:
           capacity:
            storage: 50Gi
-         volumeMode: Filesystem
+          volumeMode: Filesystem
           accessModes:
             - ReadWriteOnce
           persistentVolumeReclaimPolicy: Retain
